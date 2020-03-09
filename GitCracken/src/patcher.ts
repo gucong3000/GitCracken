@@ -5,7 +5,7 @@ import * as asar from "asar";
 import * as diff from "diff";
 import * as fs from "fs-extra";
 import natsort from "natsort";
-import * as semver from 'semver';
+import * as semver from "semver";
 
 import {baseDir} from "../global";
 import {CURRENT_PLATFORM, Platforms} from "./platform";
@@ -39,24 +39,25 @@ export class Patcher {
     apps.sort(natsort());
 
     const versions = [];
-    for(const app of apps){
-      const matches = new RegExp('app-(\\d+\\.\\d+\\.\\d+)').exec(app);
-      if(matches){
+    for (const app of apps) {
+      const matches = new RegExp("app-(\\d+\\.\\d+\\.\\d+)").exec(app);
+      if (matches) {
         versions.push(matches[1]);
       }
     }
 
     const lastVersion = Patcher.findlastAppVersion(versions);
 
-    if(!lastVersion)
+    if (!lastVersion) {
       return undefined;
+    }
 
-    let app = 'app-' + lastVersion;
+    let app = "app-" + lastVersion;
     if (!app) {
       return undefined;
     }
     app = path.join(gitkrakenLocal, app, "resources/app.asar");
-    
+
     return fs.existsSync(app) ? app : undefined;
   }
 
@@ -67,12 +68,14 @@ export class Patcher {
   }
 
   private static findlastAppVersion(versions: string[]): string | undefined {
-    if(versions.length === 0) return undefined;
+    if (versions.length === 0) {
+      return undefined;
+    }
 
     let max = versions[0];
 
-    for(const version of versions){
-      if(semver.gt(version, max)){
+    for (const version of versions) {
+      if (semver.gt(version, max)) {
         max = version;
       }
     }
@@ -165,7 +168,12 @@ export class Patcher {
    * @throws Error
    */
   public packDirAsync(): Promise<void> {
-    return asar.createPackage(this.dir, this.asar);
+    return asar.createPackageWithOptions(this.dir, this.asar, {
+      dot: true,
+      unpack:
+        "{*.node,*.pdb,*.exe,*.dll,THIRD-PARTY-LICENSES.txt,strings.json,*AskPass*.*,*askpass*.*,.DS_Store}",
+      unpackDir: "{src,static}",
+    });
   }
 
   /**
